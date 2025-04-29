@@ -90,19 +90,9 @@ export function ChatWindow({ onClose }: { onClose: () => void }) {
         sessionStorage.setItem('session_id', data.session_id);
       }
 
-      function parseMarkdown(text:string) {
-        text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-        text = text.replace(/\*(.*?)\*/g, '<em>$1</em>');
-        text = text.replace(/`(.*?)`/g, '<code>$1</code>');
-        text = text.replace(/_(.*?)_/g, '<u>$1</u>');
-        return text;
-    }
-
       const botMessage: Message = {
         id: uuidv4(),
-        content:
-        parseMarkdown(data.message) ||
-          "I received your message. How can I help you further?",
+        content: data.message || "I received your message. How can I help you further?",
         sender: "bot",
         timestamp: new Date(),
       };
@@ -153,6 +143,17 @@ export function ChatWindow({ onClose }: { onClose: () => void }) {
     }
   }, []);
 
+  // Function to render markdown
+  const renderMarkdown = (text: string) => {
+    return {
+      __html: text
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+        .replace(/`(.*?)`/g, '<code>$1</code>')
+        .replace(/_(.*?)_/g, '<u>$1</u>')
+    };
+  };
+
   return (
     <div className="fixed bottom-5 right-6 w-[23.5rem] h-[400px] bg-white rounded-lg shadow-xl z-50 flex flex-col border border-gray-200">
       {/* Header */}
@@ -193,9 +194,16 @@ export function ChatWindow({ onClose }: { onClose: () => void }) {
                   : "bg-gray-100 text-gray-800 rounded-bl-none"
               }`}
             >
-              <div className="whitespace-pre-line text-xs">
-                {message.content}
-              </div>
+              {message.sender === "bot" ? (
+                <div 
+                  className="whitespace-pre-line text-xs"
+                  dangerouslySetInnerHTML={renderMarkdown(message.content)}
+                />
+              ) : (
+                <div className="whitespace-pre-line text-xs">
+                  {message.content}
+                </div>
+              )}
               <div
                 className={`text-xs mt-1 ${
                   message.sender === "user" ? "text-blue-100" : "text-gray-500"
